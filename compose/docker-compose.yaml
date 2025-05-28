@@ -1,80 +1,92 @@
-# Docker Compose configuration for Temporal Workflow Engine
-# This file sets up a complete Temporal development environment with:
-# - PostgreSQL database for persistence
-# - Temporal server with auto-setup for schema initialization
-# - Temporal admin tools for CLI operations
-# - Temporal UI for workflow visualization and management
+# Temporal Workflow Engine Docker Compose
 
 services:
-  # PostgreSQL database for Temporal persistence
-  # Stores workflow execution history, task queues, namespace metadata, and visibility records
   postgresql:
     image: postgres
     environment:
-      POSTGRES_PASSWORD: temporal  # Database password
-      POSTGRES_USER: temporal      # Database username with create database permissions
+      POSTGRES_PASSWORD: temporal
+      POSTGRES_USER: temporal
     networks:
       - temporal-network
     ports:
-      - "5432:5432"  # Expose PostgreSQL port for external connections
+      - "5432:5432"
     volumes:
-      - /var/lib/postgresql/data  # Persistent volume for database data
-  
-  # Temporal Server
-  # Core service that manages workflow execution, history, and task dispatching
+      - /var/lib/postgresql/data
+
   temporal:
-    image: temporalio/auto-setup:1.27.2  # Uses auto setup, will automatically populate the database (temporal and temporal_visibility)
+    image: temporalio/auto-setup:1.27.2
     depends_on:
-      - postgresql  # Ensures database is available before starting
+      - postgresql
     environment:
-      - DB=postgres12                     # Type of DB, uses PostgreSQL version 12 or later
-      - DB_PORT=5432                      # PostgreSQL port
-      - POSTGRES_USER=temporal            # Database user, will need create db access
-      - POSTGRES_PWD=temporal             # Database password
-      - POSTGRES_SEEDS=postgresql         # PostgreSQL host (service name in this network)
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/config.yaml  # Path to dynamic config
-      - TEMPORAL_ADDRESS=temporal:7233    # Address for internal Temporal services communication
-      - TEMPORAL_CLI_ADDRESS=temporal:7233  # Address for CLI tools to connect
-      - PROMETHEUS_ENDPOINT=0.0.0.0:8000  # Metrics endpoint for monitoring
+      # Database configuration
+      - DB=postgres12                     # Database type (postgres12, mysql8, etc.) - Specifies which database driver to use
+      - DB_PORT=5432                      # Database port - The port on which the database server is listening
+      - POSTGRES_USER=temporal            # Database username - User with permissions to create and modify databases
+      - POSTGRES_PWD=temporal             # Database password - Password for the database user
+      - POSTGRES_SEEDS=postgresql         # Database host(s) - Comma-separated list of database servers (service names in docker-compose)
+      - DBNAME=temporal                   # Main database name - Stores workflow execution history and task queues
+      - VISIBILITY_DBNAME=temporal_visibility  # Visibility database name - Stores metadata for workflow search and visibility
+
+      # Schema setup configuration
+      - SKIP_SCHEMA_SETUP=false           # Skip schema setup - Set to true to skip automatic schema initialization
+      - NUM_HISTORY_SHARDS=512            # Number of history shards - Critical setting that determines scalability (cannot be changed after setup)
+      - SKIP_DB_CREATE=false              # Skip database creation - Set to true if databases already exist
+      - VISIBILITY_DISABLE=false          # Disable visibility - Set to true to disable workflow search capabilities
+      - AUTO_SETUP=true                   # Enable auto setup - Automatically sets up schema and creates default namespace
+      - SCHEMA_DIR=                       # Custom schema directory - Path to directory containing schema files (empty for default)
+      - SCHEMA_FILE=                      # Custom schema file - Path to specific schema file (empty for default)
+      - ENABLE_ES=false                   # Enable Elasticsearch - Set to true to use Elasticsearch for advanced visibility
+      - ES_SCHEMA_SETUP=true              # Setup Elasticsearch schema - Set to true to automatically create Elasticsearch indices
+      - ES_VISIBILITY_INDEX=temporal_visibility_v1  # Elasticsearch index name - Name of the index for visibility records
+
+      # Service configuration
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/config.yaml  # Dynamic config path - Location of dynamic configuration file
+      - TEMPORAL_ADDRESS=temporal:7233    # Temporal service address - Internal address for Temporal services communication
+      - TEMPORAL_CLI_ADDRESS=temporal:7233  # CLI address - Address for Temporal CLI tools to connect to the server
+      - PROMETHEUS_ENDPOINT=0.0.0.0:8000  # Prometheus endpoint - Address to expose metrics for monitoring systems
+
+      # Log configuration
+      - LOG_LEVEL=info                    # Log level - Sets logging verbosity (debug, info, warn, error)
+      - LOG_FORMAT=json                   # Log format - Output format for logs (json or console)
+
+      # Namespace configuration
+      - DEFAULT_NAMESPACE=default         # Default namespace - Name of the default namespace to create
+      - DEFAULT_NAMESPACE_RETENTION=7     # Retention period - Number of days to retain workflow history (1-30)
+      - REGISTER_NAMESPACE=true           # Register namespace - Whether to register the default namespace
+      - SKIP_DEFAULT_NAMESPACE_CREATION=false  # Skip namespace creation - Set to true to skip creating default namespace
+      - SKIP_ADD_CUSTOM_SEARCH_ATTRIBUTES=false  # Skip custom search attributes - Set to true to skip adding custom search attributes
     networks:
       - temporal-network
     ports:
-      - "7233:7233"  # Frontend service port for client connections (gRPC)
-      - "8000:8000"  # Prometheus metrics endpoint
+      - "7233:7233"
+      - "8000:8000"
     volumes:
-      - ./temporal:/etc/temporal/config/dynamicconfig  # Mount dynamic configuration
-  
-  # Temporal Admin Tools
-  # Provides CLI tools for managing Temporal (tctl and temporal CLI)
-  # Used for namespace management, workflow operations, and debugging
+      - ./temporal:/etc/temporal/config/dynamicconfig
+
   temporal-admin-tools:
-    image: temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0  # Contains both legacy tctl and new temporal CLI
+    image: temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0
     depends_on:
-      - temporal  # Ensures Temporal server is available
+      - temporal
     environment:
-      - TEMPORAL_ADDRESS=temporal:7233     # Address to connect to Temporal server
-      - TEMPORAL_CLI_ADDRESS=temporal:7233  # Address for CLI tools
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
     networks:
       - temporal-network
-    stdin_open: true  # Keep STDIN open for interactive CLI usage
-    tty: true         # Allocate a pseudo-TTY for better CLI experience
-  
-  # Temporal Web UI
-  # Web interface for monitoring and debugging workflows
-  # Provides visualization of workflow execution, search, and management capabilities
+    stdin_open: true
+    tty: true
+
   temporal-ui:
-    image: temporalio/ui:2.34.0  # Web UI version
+    image: temporalio/ui:2.34.0
     container_name: temporal-ui
     depends_on:
-      - temporal  # Ensures Temporal server is available
+      - temporal
     environment:
-      - TEMPORAL_ADDRESS=temporal:7233      # Address to connect to Temporal server
-      - TEMPORAL_CORS_ORIGINS=http://localhost:3000  # CORS settings for frontend development
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
     networks:
       - temporal-network
     ports:
-      - "8080:8080"  # Web UI port, access via http://localhost:8080
+      - "8080:8080"
 
-# Network for all Temporal services to communicate
 networks:
   temporal-network:
