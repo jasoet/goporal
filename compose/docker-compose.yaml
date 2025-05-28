@@ -18,6 +18,15 @@ services:
     depends_on:
       - postgresql
     environment:
+      # Base Config
+      - AUTO_SETUP=true                   # Enable auto setup - Automatically sets up schema and creates default namespace
+
+      # Service configuration
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/config.yaml  # Dynamic config path - Location of dynamic configuration file
+      - TEMPORAL_ADDRESS=temporal:7233    # Temporal service address - Internal address for Temporal services communication
+      - TEMPORAL_CLI_ADDRESS=temporal:7233  # CLI address - Address for Temporal CLI tools to connect to the server
+      - PROMETHEUS_ENDPOINT=0.0.0.0:8000  # Prometheus endpoint - Address to expose metrics for monitoring systems
+
       # Database configuration
       - DB=postgres12                     # Database type (postgres12, mysql8, etc.) - Specifies which database driver to use
       - DB_PORT=5432                      # Database port - The port on which the database server is listening
@@ -32,18 +41,11 @@ services:
       - NUM_HISTORY_SHARDS=512            # Number of history shards - Critical setting that determines scalability (cannot be changed after setup)
       - SKIP_DB_CREATE=false              # Skip database creation - Set to true if databases already exist
       - VISIBILITY_DISABLE=false          # Disable visibility - Set to true to disable workflow search capabilities
-      - AUTO_SETUP=true                   # Enable auto setup - Automatically sets up schema and creates default namespace
       - SCHEMA_DIR=                       # Custom schema directory - Path to directory containing schema files (empty for default)
       - SCHEMA_FILE=                      # Custom schema file - Path to specific schema file (empty for default)
       - ENABLE_ES=false                   # Enable Elasticsearch - Set to true to use Elasticsearch for advanced visibility
       - ES_SCHEMA_SETUP=true              # Setup Elasticsearch schema - Set to true to automatically create Elasticsearch indices
       - ES_VISIBILITY_INDEX=temporal_visibility_v1  # Elasticsearch index name - Name of the index for visibility records
-
-      # Service configuration
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/config.yaml  # Dynamic config path - Location of dynamic configuration file
-      - TEMPORAL_ADDRESS=temporal:7233    # Temporal service address - Internal address for Temporal services communication
-      - TEMPORAL_CLI_ADDRESS=temporal:7233  # CLI address - Address for Temporal CLI tools to connect to the server
-      - PROMETHEUS_ENDPOINT=0.0.0.0:8000  # Prometheus endpoint - Address to expose metrics for monitoring systems
 
       # Log configuration
       - LOG_LEVEL=info                    # Log level - Sets logging verbosity (debug, info, warn, error)
