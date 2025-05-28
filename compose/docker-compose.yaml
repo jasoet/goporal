@@ -1,10 +1,9 @@
 services:
   postgresql:
-    container_name: temporal-postgresql
+    image: postgres
     environment:
       POSTGRES_PASSWORD: temporal
       POSTGRES_USER: temporal
-    image: postgres
     networks:
       - temporal-network
     ports:
@@ -12,20 +11,19 @@ services:
     volumes:
       - /var/lib/postgresql/data
   temporal:
-    container_name: temporal
+    image: temporalio/auto-setup:1.27.2 # Uses auto setup, will automatically populate the database (temporal and temporal_visibility)
     depends_on:
       - postgresql
     environment:
-      - DB=postgres12
+      - DB=postgres12 # Type of DB, uses Postgresql version 12 or later
       - DB_PORT=5432
-      - POSTGRES_USER=temporal
+      - POSTGRES_USER=temporal # Database user, will need create db access
       - POSTGRES_PWD=temporal
       - POSTGRES_SEEDS=postgresql
       - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/config.yaml
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CLI_ADDRESS=temporal:7233
       - PROMETHEUS_ENDPOINT=0.0.0.0:8000
-    image: temporalio/auto-setup:1.27.2
     networks:
       - temporal-network
     ports:
@@ -34,25 +32,24 @@ services:
     volumes:
       - ./temporal:/etc/temporal/config/dynamicconfig
   temporal-admin-tools:
-    container_name: temporal-admin-tools
+    image: temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0
     depends_on:
       - temporal
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CLI_ADDRESS=temporal:7233
-    image: temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0
     networks:
       - temporal-network
     stdin_open: true
     tty: true
   temporal-ui:
+    image: temporalio/ui:2.34.0
     container_name: temporal-ui
     depends_on:
       - temporal
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CORS_ORIGINS=http://localhost:3000
-    image: temporalio/ui:2.34.0
     networks:
       - temporal-network
     ports:
