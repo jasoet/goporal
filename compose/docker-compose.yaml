@@ -18,9 +18,6 @@ services:
     depends_on:
       - postgresql
     environment:
-      # Base Config
-      - AUTO_SETUP=true                   # Enable auto setup - Automatically sets up schema and creates default namespace
-
       # Service configuration
       - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/config.yaml  # Dynamic config path - Location of dynamic configuration file
       - TEMPORAL_ADDRESS=temporal:7233    # Temporal service address - Internal address for Temporal services communication
@@ -36,25 +33,15 @@ services:
       - DBNAME=temporal                   # Main database name - Stores workflow execution history and task queues
       - VISIBILITY_DBNAME=temporal_visibility  # Visibility database name - Stores metadata for workflow search and visibility
 
+      - LOG_LEVEL=debug,info
+
       # Schema setup configuration
       - SKIP_SCHEMA_SETUP=false           # Skip schema setup - Set to true to skip automatic schema initialization
-      - NUM_HISTORY_SHARDS=512            # Number of history shards - Critical setting that determines scalability (cannot be changed after setup)
       - SKIP_DB_CREATE=false              # Skip database creation - Set to true if databases already exist
-      - VISIBILITY_DISABLE=false          # Disable visibility - Set to true to disable workflow search capabilities
-      - SCHEMA_DIR=                       # Custom schema directory - Path to directory containing schema files (empty for default)
-      - SCHEMA_FILE=                      # Custom schema file - Path to specific schema file (empty for default)
-      - ENABLE_ES=false                   # Enable Elasticsearch - Set to true to use Elasticsearch for advanced visibility
-      - ES_SCHEMA_SETUP=true              # Setup Elasticsearch schema - Set to true to automatically create Elasticsearch indices
-      - ES_VISIBILITY_INDEX=temporal_visibility_v1  # Elasticsearch index name - Name of the index for visibility records
-
-      # Log configuration
-      - LOG_LEVEL=info                    # Log level - Sets logging verbosity (debug, info, warn, error)
-      - LOG_FORMAT=json                   # Log format - Output format for logs (json or console)
 
       # Namespace configuration
       - DEFAULT_NAMESPACE=default         # Default namespace - Name of the default namespace to create
-      - DEFAULT_NAMESPACE_RETENTION=7     # Retention period - Number of days to retain workflow history (1-30)
-      - REGISTER_NAMESPACE=true           # Register namespace - Whether to register the default namespace
+      - DEFAULT_NAMESPACE_RETENTION=7d     # Retention period = default 24h (using Go Duration standard)
       - SKIP_DEFAULT_NAMESPACE_CREATION=false  # Skip namespace creation - Set to true to skip creating default namespace
       - SKIP_ADD_CUSTOM_SEARCH_ATTRIBUTES=false  # Skip custom search attributes - Set to true to skip adding custom search attributes
     networks:
