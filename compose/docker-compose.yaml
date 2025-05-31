@@ -10,7 +10,7 @@ services:
     networks:
       - temporal-network
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -64,7 +64,7 @@ services:
     networks:
       - temporal-network
     ports:
-      - "8080:8080"
+      - "7373:8080"
 
   temporal-admin-tools:
     image: temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0
