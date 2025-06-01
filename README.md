@@ -30,7 +30,7 @@ This will start the following services:
 
 1. **PostgreSQL** - Database for Temporal (exposed on port 5434)
 2. **Temporal Server** - The main Temporal service (exposed on port 7233)
-3. **Temporal UI** - Web interface for monitoring workflows (exposed on port 7373)
+3. **Temporal UI** - Web interface for monitoring workflows (exposed on port 8233)
 4. **Temporal Admin Tools** - CLI tools for interacting with Temporal
 
 ## Accessing Temporal UI
@@ -38,7 +38,7 @@ This will start the following services:
 Once the services are running, you can access the Temporal UI at:
 
 ```
-http://localhost:7373
+http://localhost:8233
 ```
 
 The UI allows you to:
@@ -81,7 +81,7 @@ The Temporal setup uses the following configuration:
 
 - **Database**: PostgreSQL with automatic schema initialization
 - **Default Namespace**: "default" with 7-day retention period
-- **Metrics**: Prometheus-compatible metrics exposed on port 8000
+- **Metrics**: Prometheus-compatible metrics exposed on port 7244
 - **Dynamic Configuration**: Minimal configuration in `compose/temporal/config.yaml`
 
 ## Stopping Temporal
@@ -157,4 +157,4 @@ If you encounter issues:
 
 1. Check service status: `docker-compose ps`
 2. View logs: `docker-compose logs temporal`
-3. Ensure all ports are available (5434, 7233, 7373, 8000)
+3. Ensure all ports are available (5434, 7233, 8233, 7244)

@@ -23,7 +23,7 @@ services:
       - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/config.yaml  # Dynamic config path - Location of dynamic configuration file
       - TEMPORAL_ADDRESS=temporal:7233    # Temporal service address - Internal address for Temporal services communication
       - TEMPORAL_CLI_ADDRESS=temporal:7233  # CLI address - Address for Temporal CLI tools to connect to the server
-      - PROMETHEUS_ENDPOINT=0.0.0.0:8000  # Prometheus endpoint - Address to expose metrics for monitoring systems
+      - PROMETHEUS_ENDPOINT=0.0.0.0:7244  # Prometheus endpoint - Address to expose metrics for monitoring systems
 
       # Database configuration
       - DB=postgres12                     # Database type (postgres12, mysql8, etc.) - Specifies which database driver to use
@@ -49,7 +49,7 @@ services:
       - temporal-network
     ports:
       - "7233:7233"
-      - "8000:8000"
+      - "7244:7244"
     volumes:
       - ./temporal:/etc/temporal/config/dynamicconfig
 
@@ -61,10 +61,11 @@ services:
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+      - TEMPORAL_UI_PORT=8233
     networks:
       - temporal-network
     ports:
-      - "7373:8080"
+      - "8233:8233"
 
   temporal-admin-tools:
     image: temporalio/admin-tools:1.27.2-tctl-1.18.2-cli-1.3.0
